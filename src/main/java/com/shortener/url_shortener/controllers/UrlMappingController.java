@@ -1,11 +1,16 @@
 package com.shortener.url_shortener.controllers;
 
 import com.shortener.url_shortener.dto.ClickEventDTO;
+import com.shortener.url_shortener.dto.ShortenRequest;
 import com.shortener.url_shortener.dto.UrlMappingDTO;
 import com.shortener.url_shortener.models.User;
 import com.shortener.url_shortener.service.UrlMappingService;
 import com.shortener.url_shortener.service.UserService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -26,18 +31,21 @@ public class UrlMappingController {
 
     @PostMapping("/shorten")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<UrlMappingDTO> createShortUrl(@RequestBody Map<String, String> request, Principal principal){
-        String originalUrl = request.get("originalUrl");
+    public ResponseEntity<UrlMappingDTO> createShortUrl(@Valid @RequestBody ShortenRequest request, Principal principal){
         User user = userServ.findByUsername(principal.getName());
-        UrlMappingDTO urlMappingDTO = urlMappingServ.createShortUrl(originalUrl, user);
+        UrlMappingDTO urlMappingDTO = urlMappingServ.createShortUrl(request.getOriginalUrl(), user);
         return ResponseEntity.ok(urlMappingDTO);
     }
 
     @GetMapping("/myurls")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<List<UrlMappingDTO>> getUserUrl(Principal principal){
+    public ResponseEntity<Page<UrlMappingDTO>> getUserUrl(
+            Principal principal,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size){
         User user = userServ.findByUsername(principal.getName());
-        List<UrlMappingDTO> urls = urlMappingServ.getUrlsByUser(user);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<UrlMappingDTO> urls = urlMappingServ.getUrlsByUser(user, pageable);
         return ResponseEntity.ok(urls);
     }
 

@@ -4,6 +4,7 @@ import com.shortener.url_shortener.dto.LoginRequest;
 import com.shortener.url_shortener.dto.RegisterRequest;
 import com.shortener.url_shortener.models.User;
 import com.shortener.url_shortener.service.UserService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,8 +19,7 @@ public class AuthController {
     private UserService userServ;
 
     @PostMapping("/public/register")
-    public ResponseEntity<?> registerUser(@RequestBody RegisterRequest registerRequest){
-
+    public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest){
         User user = new User();
         user.setEmail(registerRequest.getEmail());
         user.setUsername(registerRequest.getUsername());
@@ -30,7 +30,7 @@ public class AuthController {
     }
 
     @PostMapping("/public/login")
-    public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest){
+    public ResponseEntity<?> loginUser(@Valid @RequestBody LoginRequest loginRequest){
         return ResponseEntity.ok(userServ.authenticateUser(loginRequest));
     }
 

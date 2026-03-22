@@ -9,7 +9,9 @@ import com.shortener.url_shortener.repository.ClickEventRepository;
 import com.shortener.url_shortener.repository.UrlMappingRepository;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -64,7 +66,7 @@ public class UrlMappingService {
 
             StringBuilder sb = new StringBuilder(7);
 
-            for (int i = 0; i < 7; i++)
+            for (int i = 0; i < 7 ; i++)
                 sb.append(characters.charAt(random.nextInt(characters.length())));
 
             shortUrl = sb.toString();
@@ -74,11 +76,9 @@ public class UrlMappingService {
         return shortUrl;
     }
 
-    public List<UrlMappingDTO> getUrlsByUser(User user) {
-        return urlMappingRepo.findByUser(user)
-                .stream()
-                .map(this::convertToDto)
-                .toList();
+    public Page<UrlMappingDTO> getUrlsByUser(User user, Pageable pageable) {
+        return urlMappingRepo.findByUser(user, pageable)
+                .map(this::convertToDto);
     }
 
     public List<ClickEventDTO> getClickEventsByDate(String shortUrl, LocalDateTime start, LocalDateTime end) {
@@ -98,7 +98,7 @@ public class UrlMappingService {
                     .toList();
         }
 
-        return null;
+        return List.of();
 
     }
 
@@ -111,19 +111,32 @@ public class UrlMappingService {
     }
 
     @Cacheable(value = "urls", key = "#shortUrl")
-    public UrlMapping getOriginalUrl(String shortUrl) {
-        UrlMapping urlMapping = urlMappingRepo.findByShortUrl(shortUrl);
-       if(urlMapping != null){
-           urlMapping.setClickCount(urlMapping.getClickCount()+1);
-           urlMappingRepo.save(urlMapping);
+    public UrlMapping getOriginalUrl(String shortUrl){
+        return urlMappingRepo.findByShortUrl(shortUrl);
+    }
+
+    public void recordClick(UrlMapping urlMapping){
+        urlMapping.setClickCount(urlMapping.getClickCount() + 1);
+        urlMappingRepo.save(urlMapping);
 
         ClickEvent clickEvent = new ClickEvent();
         clickEvent.setClickDate(LocalDateTime.now());
         clickEvent.setUrlMapping(urlMapping);
         clickEventRepo.save(clickEvent);
-       }
-
-        return urlMapping;
     }
+//    @Cacheable(value = "urls", key = "#shortUrl")
+//    public UrlMapping getOriginalUrl(String shortUrl) {
+//        UrlMapping urlMapping = urlMappingRepo.findByShortUrl(shortUrl);
+//       if(urlMapping != null){
+//           urlMapping.setClickCount(urlMapping.getClickCount()+1);
+//           urlMappingRepo.save(urlMapping);
+//
+//        ClickEvent clickEvent = new ClickEvent();
+//        clickEvent.setClickDate(LocalDateTime.now());
+//        clickEvent.setUrlMapping(urlMapping);
+//        clickEventRepo.save(clickEvent);
+//       }
+//        return urlMapping;
+//    }
 }
 

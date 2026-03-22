@@ -21,6 +21,7 @@ public class RedirectController {
     public ResponseEntity<Void> redirect(@PathVariable String shortUrl){
         UrlMapping urlMapping = urlMappingServ.getOriginalUrl(shortUrl);
         if(urlMapping != null){
+            urlMappingServ.recordClick(urlMapping);
             HttpHeaders httpHeaders = new HttpHeaders();
             httpHeaders.add("Location", urlMapping.getOriginalUrl());
             return ResponseEntity.status(302).headers(httpHeaders).build();

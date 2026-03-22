@@ -35,10 +35,11 @@ public class WebSecurityConfig{
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth ->
-                                auth.requestMatchers("/api/auth/**").permitAll()
-                                    .requestMatchers("/api/urls/**").authenticated()
-                                    .requestMatchers("/{shortUrl}").permitAll()
-                                    .anyRequest().authenticated());
+                                    auth.requestMatchers("/api/auth/**").permitAll()
+                                        .requestMatchers("/api/urls/**").authenticated()
+                                        .requestMatchers("/{shortUrl}").permitAll()
+                                        .requestMatchers("/swagger-ui/**","/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                                        .anyRequest().authenticated());
 
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
         http.authenticationProvider(authenticationProvider());
